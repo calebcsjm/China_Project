@@ -1,11 +1,10 @@
 '''given a url, scrape the article information'''
 
-import json
-import openai
 from newspaper import Article
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import json
+import openai
 
 def process_complicated_author(author):
 
@@ -33,16 +32,23 @@ class QiuShiArticleParser:
     def __init__(self, url):
         # get the beautiful soup version
         self.url = url
-        page = urlopen(url)
-        html = page.read().decode("utf-8")
-        self.soup = BeautifulSoup(html, "html.parser")
+        try:
+            page = urlopen(url)
+            html = page.read().decode("utf-8")
+            self.soup = BeautifulSoup(html, "html.parser")
 
-        # get the newspaper article version
-        self.article = Article(url, language='zh')
-        self.article.download()
-        self.article.parse()
+            # get the newspaper article version
+            self.article = Article(url, language='zh')
+            self.article.download()
+            self.article.parse()
+        except:
+            print(f"Article with URL: {url} failed to parse")
+            self.soup = None
+            self.article = None
 
     def get_authors(self):
+        if self.soup == None:
+            return None
         span_els = self.soup.find_all("span", class_="appellation")
         try:
             # author is the second appel element
@@ -75,9 +81,14 @@ class QiuShiArticleParser:
             return None
     
     def get_title(self):
+        if self.soup == None:
+            return None
         return self.soup.find('h1').text.strip()
     
     def get_year_edition(self):
+        if self.soup == None:
+            return None, None
+        
         span_els = self.soup.find_all("span", class_="appellation")
         # year/edition is the first appel element
         ye_text = span_els[0].text.strip()
@@ -90,6 +101,9 @@ class QiuShiArticleParser:
         return year, edition
     
     def get_date(self):
+        if self.soup == None:
+            return None
+
         date_el = self.soup.find("span", class_="pubtime").text.strip()
         # remove the time piece
         date = date_el.split(" ")[0]
@@ -99,6 +113,9 @@ class QiuShiArticleParser:
         return self.url
     
     def get_text(self):
+        if self.article == None:
+            return None
+
         return self.article.text.replace('\n', "")
     
 class QiuShiArticle:
