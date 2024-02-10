@@ -4,7 +4,9 @@ openai_auth.json
 CS 498 Timelog.xlsx
 ~CS 498 Timelog.xlsx
 mongodb_auth.json
-process_articles
 process_articles/processed_articles.csv
 .DS_Store
 notes.md
+visuals
+analyze_articles/quarter_sentiments
+analyze_articles/frequency_counts
