@@ -10,3 +10,4 @@ notes.md
 visuals
 analyze_articles/quarter_sentiments
 analyze_articles/frequency_counts
+process_economic_data/*.csv
