@@ -11,3 +11,7 @@ visuals
 analyze_articles/quarter_sentiments
 analyze_articles/frequency_counts
 process_economic_data/*.csv
+automated_monitoring/*.txt
+automated_monitoring/*.log
+docs_example.py
+reports/econ_report.pdf
