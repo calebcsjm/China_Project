@@ -1,8 +1,7 @@
 qiushi_venv
 .vscode
 openai_auth.json
-CS 498 Timelog.xlsx
-~CS 498 Timelog.xlsx
+*.xlsx
 mongodb_auth.json
 process_articles/processed_articles.csv
 .DS_Store
@@ -10,8 +9,12 @@ notes.md
 visuals
 analyze_articles/quarter_sentiments
 analyze_articles/frequency_counts
+analyze_articles/author_info
 process_economic_data/*.csv
 automated_monitoring/*.txt
 automated_monitoring/*.log
 docs_example.py
-reports/econ_report.pdf
+reports/*.pdf
+reports/*.docx
+process_articles/*.csv
+get_articles/all_articles copy.csv
