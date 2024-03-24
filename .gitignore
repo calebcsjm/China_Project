@@ -18,3 +18,8 @@ reports/*.pdf
 reports/*.docx
 process_articles/*.csv
 get_articles/all_articles copy.csv
+get_aisixiang_articles/asx_article_links_split
+get_aisixiang_articles/asx_articles
+get_aisixiang_articles/asx/articles*
+*.pyc
+all_asx_articles*
