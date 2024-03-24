@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 def notify(article):
     print(f"\nNew article: {article.title.text}")
-    message = article.title.text + "\n" + article.link.text
+    message = article.title.text + "\n" + article.description.text +"\n"  + article.link.text
     # determine where you want to send the message to
     # send_email_alert(message)
     client.chat_postMessage(
@@ -57,12 +57,14 @@ filehandle.close()
 if previous_most_recent_timestamp == "":
     previous_most_recent_timestamp = articles[-1].pubDate.text
 
-print(f"Previous most recent timestamp: {previous_most_recent_timestamp}")
+print(f"\nPrevious most recent timestamp: {previous_most_recent_timestamp}")
 
 if most_recent_time_string == previous_most_recent_timestamp:
     # matches, no new info
+    print(f"No new articles. Current time: {datetime.now()}")
     print(False)
 else:
+    print(f"New articles found. Current time: {datetime.now()}")
     # does not match, send notifications for new ones
     filehandle = open("previous_most_recent_timestamp.txt", 'w')
 
