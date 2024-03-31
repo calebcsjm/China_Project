@@ -6,8 +6,6 @@ class ASXSpider(scrapy.Spider):
 
     name = 'articles'
 
-    # handle_httpstatus_list = [404]
-
     def start_requests(self):
         # use the tag to specify which links to pull
         tag = getattr(self, "tag", None)
