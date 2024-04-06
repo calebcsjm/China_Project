@@ -10,7 +10,7 @@ def get_articles_per_quarter(df):
     articles_per_quarter = dict(sorted(articles_per_quarter.items()))
     return articles_per_quarter
 
-# graphing
+# Graphing
 
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredText
@@ -21,3 +21,4 @@ def add_correlation_box(series1, series2, ax):
     text_box = AnchoredText(f"corr = {correlation}", frameon=True, loc='lower right', pad=0.5)
     plt.setp(text_box.patch, facecolor='white', alpha=0.5)
     ax.add_artist(text_box)
+
