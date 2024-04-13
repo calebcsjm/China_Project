@@ -10,10 +10,11 @@ sentiment_model = pipeline(
 )
 
 BASE_SAVE_FOLDER = '/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/analyze_articles/sentiment_analysis/quarter_sentiments/'
-ARTICLE_PATH = '/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/process_articles/process_asx_articles/validated_asx_articles.csv'
-AGGREGATE_SAVE_FOLDER = '/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/analyze_articles/sentiment_analysis/aggregated_sentiments/'
+# ARTICLE_PATH = '/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/process_articles/process_asx_articles/validated_asx_articles.csv'
+ARTICLE_PATH = "/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/process_articles/process_qiushi_articles/validated_qiushi_articles.csv"
+AGGREGATE_SAVE_FOLDER = '/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/analyze_articles/sentiment_analysis/aggregated_sentiments_2.0/'
 TERM = '经济'
-PUBLISHER = 'ASX'
+PUBLISHER = 'QS'
 
 # Create a new directory
 new_directory = BASE_SAVE_FOLDER + "/" + PUBLISHER + "/" + TERM
@@ -54,7 +55,7 @@ def calculate_sentiment(df, term):
 
     print(f"Articles in quarter: {len(df)}")
 
-    # store average sentiment scores for each article in the df
+    # store average sentiment scores for each sentence in the df with the term
     pos_scores = []
     neu_scores = []
     neg_scores = []
@@ -66,6 +67,7 @@ def calculate_sentiment(df, term):
         if counter % 100 == 0:
             print(f"Analyzed {counter}/{len(df)} articles")
 
+        # verify the text has the term, if not skip
         text = row["text"]
         if not is_valid_row(text, term):
             continue
@@ -149,6 +151,7 @@ def join_quarterly_sentiments():
         dfs.append(temp_df)
 
     result = pd.concat(dfs, ignore_index=True)
+    result = result.sort_values(by='year_quarter')
     result.to_csv(f'{AGGREGATE_SAVE_FOLDER}/{PUBLISHER}_{TERM}.csv', index=False)
 
 if __name__ == "__main__":
