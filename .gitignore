@@ -27,3 +27,4 @@ all_asx_articles*
 articles/scrape_articles/get_aisixiang_articles/asx_articles
 articles/analyze_articles/analyze_asx_articles/outputs
 *.csv
+__pycache__
