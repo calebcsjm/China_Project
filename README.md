@@ -1,0 +1,4 @@
+# China Through the Lens of NLP
+## A Text Analysis of Qiushi and Aisixiang
+
+The inner workings of the Chinese Communist Party (CCP) are notoriously opaque, and outsiders constantly struggle to understand what is going on in China, and how they should act in response. In this project, I analyzed articles from two primary sources: Qiushi and Aisixiang, in an attempt to gain additional insights. Qiushi is the Chinese Communist Party’s (CCP) flagship ideological magazine. Aisixiang is a Chinese think tank that was identified as significant by a Chinese consulting company. I web-scraped all the articles they posted from 2019 through 2023, and used them to perform a variety of analyses, looking at the main writers, key topics, and trends around key terms like “economy” or the Belt and Road Initiative. 

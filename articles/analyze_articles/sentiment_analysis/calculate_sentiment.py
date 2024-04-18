@@ -4,23 +4,13 @@ import pandas as pd
 import csv
 import os
 
+BASE_QUARTER_SAVE_FOLDER = '/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/analyze_articles/sentiment_analysis/quarter_sentiments/'
+AGGREGATE_SAVE_FOLDER = '/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/analyze_articles/sentiment_analysis/aggregated_sentiments_2.0/'
+
 sentiment_model = pipeline(
     model="lxyuan/distilbert-base-multilingual-cased-sentiments-student", 
     top_k=None
 )
-
-BASE_SAVE_FOLDER = '/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/analyze_articles/sentiment_analysis/quarter_sentiments/'
-# ARTICLE_PATH = '/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/process_articles/process_asx_articles/validated_asx_articles.csv'
-ARTICLE_PATH = "/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/process_articles/process_qiushi_articles/validated_qiushi_articles.csv"
-AGGREGATE_SAVE_FOLDER = '/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/analyze_articles/sentiment_analysis/aggregated_sentiments_2.0/'
-TERM = '经济'
-PUBLISHER = 'QS'
-
-# Create a new directory
-new_directory = BASE_SAVE_FOLDER + "/" + PUBLISHER + "/" + TERM
-os.makedirs(new_directory, exist_ok=True)
-# Store the file path for the directory
-SAVE_FOLDER = os.path.abspath(new_directory)
 
 def is_valid_row(text, term):
     '''Verifies that the article has text and contains the word'''
@@ -48,7 +38,7 @@ def get_split_sentences(text):
 def list_average(list):
     return sum(list) / len(list)
     
-def calculate_sentiment(df, term):
+def calculate_term_sentiment(df, term):
     """Calculates average sentiment for sentences containing the term across a dataframe.
     
     Intended for use on one quarter at a time"""
@@ -77,30 +67,20 @@ def calculate_sentiment(df, term):
         # get the sentences with the term
         sentences_w_term = [sentence for sentence in sentences if term in sentence]
 
-        # sentiment of each sentence
-        positive_sent_scores = []
-        neutral_sent_scores = []
-        negative_sent_scores = []
-
+        # iterate over all the sentences in the article that contain the term
         for sentence in sentences_w_term:
             try:
+                # calculate sentiment scores for that sentence
                 sentiment_scores = sentiment_model(sentence)
-                positive_sent_scores.append(sentiment_scores[0][0]['score'])
-                neutral_sent_scores.append(sentiment_scores[0][1]['score'])
-                negative_sent_scores.append(sentiment_scores[0][2]['score'])
+
+                # add the scores to the quarter's lists
+                # if the sentence had n uses of the term, duplicated it n times, so sentences with more uses are given more weight
+                sentence_term_count = sentence.count(term)
+                pos_scores.extend([sentiment_scores[0][0]['score']] * sentence_term_count)
+                neu_scores.extend([sentiment_scores[0][1]['score']] * sentence_term_count)
+                neg_scores.extend([sentiment_scores[0][2]['score']] * sentence_term_count)
             except:
                 print(f"Sentiment analysis failed on sentence: {sentence}")
-
-        # average for article using the number of sentences
-        article_avg_pos = list_average(positive_sent_scores)
-        article_avg_neu = list_average(neutral_sent_scores) 
-        article_avg_neg = list_average(negative_sent_scores) 
-
-        # append article scores to df list
-        pos_scores.append(article_avg_pos)
-        neu_scores.append(article_avg_neu)
-        neg_scores.append(article_avg_neg)
-
 
     try:
         avg_pos = list_average(pos_scores) 
@@ -116,21 +96,19 @@ def calculate_sentiment(df, term):
     return results
 
 
-def worker(df, quarter, term):
+def worker(df, quarter, term, save_folder):
     '''Worker that calculates the sentiment in a quarter and saves the results in a csv'''
     # initial check
     print(f'df len: {len(df)}, quarter: {quarter}, term: {term}')
 
-    # quarter = quarter.replace(" ", "_")
-
     # calculate the sentiment results
-    sentiment_results = calculate_sentiment(df, term)
+    sentiment_results = calculate_term_sentiment(df, term)
 
     # add the quarter to the results dictionary
     sentiment_results['year_quarter'] = quarter
 
     # convert the dictionary results to a csv file and save
-    with open(f'{SAVE_FOLDER}/{quarter}.csv', 'w') as f:  
+    with open(f'{save_folder}/{quarter}.csv', 'w') as f:  
         w = csv.DictWriter(f, sentiment_results.keys())
         w.writeheader()
         w.writerow(sentiment_results)
@@ -138,35 +116,39 @@ def worker(df, quarter, term):
     print(f"Worker \"{quarter}\": Completed processing {len(df)} articles")
 
 
-def join_quarterly_sentiments():
+def join_quarterly_sentiments(quarter_save_folder, publisher, term):
     '''Iterate over all the csv files in the folder we generated, and combine them into one'''
     dfs = []
-    files = os.listdir(SAVE_FOLDER)
+    files = os.listdir(quarter_save_folder)
 
     # Iterate over each file
     for file_name in files:
         # Construct the full file path
-        file_path = os.path.join(SAVE_FOLDER, file_name)
+        file_path = os.path.join(quarter_save_folder, file_name)
         temp_df = pd.read_csv(file_path)
         dfs.append(temp_df)
 
     result = pd.concat(dfs, ignore_index=True)
     result = result.sort_values(by='year_quarter')
-    result.to_csv(f'{AGGREGATE_SAVE_FOLDER}/{PUBLISHER}_{TERM}.csv', index=False)
+    result.to_csv(f'{AGGREGATE_SAVE_FOLDER}/{publisher}_{term}.csv', index=False)
 
-if __name__ == "__main__":
+
+def calculate_magazine_sentiment(article_path, term, publisher):
+    # Create a new directory
+    new_directory = BASE_QUARTER_SAVE_FOLDER + "/" + publisher + "/" + term
+    os.makedirs(new_directory, exist_ok=True)
+
+    # Store the file path for the directory
+    quarter_save_folder = os.path.abspath(new_directory)
 
     # get the data
     print("Loading articles...")
-    articles = pd.read_csv(ARTICLE_PATH)
+    articles = pd.read_csv(article_path)
     print("Loaded CSV")
 
     # define the list of quarter names
     quarters = sorted(articles['year_quarter'].unique())
     print(f'Quarters: {quarters}')
-
-    # create a n-length list of the term
-    terms = [TERM] * len(quarters)
 
     # create a list of the quarters
     dfs = []
@@ -182,7 +164,7 @@ if __name__ == "__main__":
 
     # Map the worker function to the pool of processes
     # Each process will execute the worker function with a different argument
-    pool.starmap(worker, zip(dfs, quarters, terms))
+    pool.starmap(worker, zip(dfs, quarters, [term] * len(quarters), [quarter_save_folder] * len(quarters)))
 
     # Close the pool to prevent any more tasks from being submitted
     pool.close()
@@ -191,4 +173,34 @@ if __name__ == "__main__":
     pool.join()
 
     # join the resulting files into one 
-    join_quarterly_sentiments()
+    join_quarterly_sentiments(quarter_save_folder, publisher, term)
+
+
+if __name__ == "__main__":
+    # analyze QS
+    calculate_magazine_sentiment("/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/process_articles/process_qiushi_articles/validated_qiushi_articles.csv",
+                                 '一带一路',
+                                 "QS")
+    calculate_magazine_sentiment("/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/process_articles/process_qiushi_articles/validated_qiushi_articles.csv",
+                                 '全球发展倡议',
+                                 "QS")
+    calculate_magazine_sentiment("/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/process_articles/process_qiushi_articles/validated_qiushi_articles.csv",
+                                 '经济',
+                                 "QS")
+    
+    # analyze ASX
+    calculate_magazine_sentiment("/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/process_articles/process_asx_articles/validated_asx_articles.csv",
+                                 '一带一路',
+                                 "ASX")
+    calculate_magazine_sentiment("/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/process_articles/process_asx_articles/validated_asx_articles.csv",
+                                 '全球发展倡议',
+                                 "ASX")
+    calculate_magazine_sentiment("/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/process_articles/process_asx_articles/validated_asx_articles.csv",
+                                 '美国',
+                                 "ASX")
+    calculate_magazine_sentiment("/Users/calebharding/Documents/BYU/2023-2024/China_Project/articles/process_articles/process_asx_articles/validated_asx_articles.csv",
+                                 '经济',
+                                 "ASX")
+    
+
+    
